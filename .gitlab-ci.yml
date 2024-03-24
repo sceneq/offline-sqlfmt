@@ -1,0 +1,45 @@
+wasm:
+  stage: build
+  image: "rust:latest"
+  script:
+    - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    - wasm-pack build -t web sqlformat_wasm
+
+  cache:
+    key:
+      files:
+        - sqlformat_wasm.js
+      prefix: cargo
+    paths:
+      - sqlformat_wasm/pkg/
+
+  artifacts:
+    untracked: true
+
+pages:
+  image: node:21.6.2
+  stage: deploy
+
+  cache:
+    key:
+      files:
+        - package-lock.json
+      prefix: npm
+    paths:
+      - node_modules/
+
+  script:
+    - npm install -f
+    - npm run build
+    - mkdir -p public/offline-sqlfmt/
+    - cp -a dist/. public/offline-sqlfmt/
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+  artifacts:
+    paths:
+      - public
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

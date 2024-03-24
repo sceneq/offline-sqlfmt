@@ -1,0 +1,82 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container: 
+      image: rust:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM package
+        run: wasm-pack build -t web sqlformat_wasm
+
+      - name: Cache WASM build
+        uses: actions/cache@v4
+        with:
+          path: sqlformat_wasm/pkg/
+          key: cargo-${{ hashFiles('sqlformat_wasm.js') }}
+
+      - name: Upload WASM package for deploy job
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-package
+          path: sqlformat_wasm/pkg/
+
+  deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download WASM package
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-package
+          path: sqlformat_wasm/pkg/
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 21
+          cache: 'npm'
+
+      - name: Install
+        run: npm install -f
+      - name: Build
+        run: npm run build
+
+      - name: Prepare for Deployment
+        run: |
+          mkdir -p public/offline-sqlfmt/
+          cp -a dist/. public/offline-sqlfmt/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
