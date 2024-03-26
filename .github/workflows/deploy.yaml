@@ -66,8 +66,8 @@ jobs:
 
       - name: Prepare for Deployment
         run: |
-          mkdir -p public/offline-sqlfmt/
-          cp -a dist/. public/offline-sqlfmt/
+          mkdir -p public
+          cp -a dist/. public
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
