@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useState } from "react";
 import "./App.css";
 import { Init } from "./Init";
+import { useLocalStorage } from "./useLocalStorage"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "#sqlformat_wasm";
 import { Editor, OnChange } from "@monaco-editor/react";
@@ -37,7 +38,8 @@ function Output(props: OutputProps) {
 }
 
 function InOut() {
-  const [input, setInput] = useState(
+  const [input, setInput] = useLocalStorage<string>(
+    "code",
     `
 with  g as(                                        select
 a,b,sum(c) over(partition by a) as     c from tab where a
