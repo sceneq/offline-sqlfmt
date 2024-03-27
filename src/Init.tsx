@@ -1,6 +1,5 @@
-//import init from "@wasm-fmt/sql_fmt/vite";
-import init from "#sqlformat_wasm";
 import { use } from "react";
+import init from "#sqlformat_wasm";
 
 const initPromise = init();
 
